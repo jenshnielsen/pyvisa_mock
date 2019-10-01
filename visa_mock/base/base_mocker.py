@@ -103,7 +103,7 @@ class BaseMocker(metaclass=MockerMetaClass):
             raise ValueError(f"Unknown SCPI command {scpi_string}")
 
         new_function = function
-        return str(new_function(self, *args))
+        return new_function(self, *args)
 
 
 scpi = BaseMocker.scpi

@@ -3,6 +3,7 @@ Large parts of this code has been copied directly from pyvisa-sim
 
 https://github.com/pyvisa/pyvisa-sim
 """
+from collections import deque, abc
 from typing import Optional
 from pyvisa import constants, attributes, rname
 import logging
@@ -37,7 +38,7 @@ class Session:
         self.session_type = None
         self.session_index = resource_manager_session
         self._device: Optional[BaseMocker] = None
-        self._read_buffer = ""
+        self._read_buffer = deque()
 
     @property
     def device(self) -> BaseMocker:
@@ -95,11 +96,13 @@ class Session:
 
     def write(self, message: str) -> None:
         reply = self.device.send(message)
-        if reply is not None:
-            self._read_buffer = reply
+        if isinstance(reply, abc.Sequence) and not isinstance(reply, str):
+            self._read_buffer.extend(reply)
+        elif reply is not None:
+            self._read_buffer.append(reply)
 
     def read(self) -> str:
-        return self._read_buffer
+        return self._read_buffer.popleft()
 
     def ask(self, message: str):
         self.write(message)
